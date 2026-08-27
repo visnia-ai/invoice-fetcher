@@ -92,14 +92,22 @@ jobs:
         shell: bash
         env:
           EXPECTED_ARCH: ${{ matrix.file_arch }}
+          EXPECTED_NODE_ARCH: ${{ matrix.arch }}
           EXPECTED_VERSION: ${{ steps.package.outputs.version }}
         run: |
-          set -x
-          file_output="$(file build/invoice-fetcher)"
-          case "$file_output" in
-            *"$EXPECTED_ARCH"*) ;;
-            *) echo "Unexpected executable architecture: $file_output" >&2; exit 1 ;;
-          esac
+          if [ "${{ matrix.platform }}" = "linux" ]; then
+            machine="$(readelf -h build/invoice-fetcher | sed -n 's/^[[:space:]]*Machine:[[:space:]]*//p')"
+            case "$EXPECTED_NODE_ARCH:$machine" in
+              "x64:Advanced Micro Devices X86-64"|"arm64:AArch64") ;;
+              *) echo "Unexpected ELF architecture: $machine" >&2; exit 1 ;;
+            esac
+          else
+            file_output="$(file build/invoice-fetcher)"
+            case "$file_output" in
+              *"$EXPECTED_ARCH"*) ;;
+              *) echo "Unexpected executable architecture: $file_output" >&2; exit 1 ;;
+            esac
+          fi
           if ! actual_version="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --version)"; then
             echo "Packaged executable failed while reading its version" >&2
             exit 1
