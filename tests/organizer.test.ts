@@ -30,8 +30,15 @@ describe("organizer", () => {
 
   it("adds an ISO month only for multi-month searches", () => {
     const date = new Date(2026, 0, 12);
-    assert.equal(invoiceDirectory("/tmp/out", "a@vendor.com", date, false), "/tmp/out/vendor.com");
-    assert.equal(invoiceDirectory("/tmp/out", "a@vendor.com", date, true), "/tmp/out/2026-01/vendor.com");
+    const destinationRoot = "/tmp/out";
+    assert.equal(
+      invoiceDirectory(destinationRoot, "a@vendor.com", date, false),
+      path.join(destinationRoot, "vendor.com"),
+    );
+    assert.equal(
+      invoiceDirectory(destinationRoot, "a@vendor.com", date, true),
+      path.join(destinationRoot, "2026-01", "vendor.com"),
+    );
   });
 
   it("deduplicates identical files and suffixes different collisions", async () => {

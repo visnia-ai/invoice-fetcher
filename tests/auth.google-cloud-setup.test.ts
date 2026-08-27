@@ -81,7 +81,9 @@ test("automatic Google setup creates and remembers a dedicated project", async (
   assert.equal(client.clientId, CLIENT_ID);
   assert.equal(client.clientSecret, "GOCSPX-client-secret");
   assert.equal(await stateStore.get(EMAIL), PROJECT_ID);
-  assert.equal((await stat(statePath)).mode & 0o777, 0o600);
+  if (process.platform !== "win32") {
+    assert.equal((await stat(statePath)).mode & 0o777, 0o600);
+  }
   assert.ok(calls.some(({ args }) => args[0] === "projects" && args[1] === "create"));
   assert.ok(calls.some(({ args }) => args.includes("gmail.googleapis.com")));
   assert.equal(calls.some(({ args }) => args.includes("config")), false);

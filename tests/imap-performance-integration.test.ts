@@ -29,9 +29,10 @@ function deferred(): Deferred {
 }
 
 async function waitFor(predicate: () => boolean): Promise<void> {
-  for (let turn = 0; turn < 50; turn += 1) {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
     if (predicate()) return;
-    await new Promise<void>((resolve) => setImmediate(resolve));
+    await new Promise<void>((resolve) => setTimeout(resolve, 5));
   }
   assert.fail("Timed out waiting for asynchronous test state.");
 }

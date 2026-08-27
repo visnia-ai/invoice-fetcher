@@ -25,7 +25,7 @@ import {
   type GcloudCommandResult,
 } from "../src/auth/index.js";
 
-const TAR_PATH = "/usr/bin/tar";
+const TAR_PATH = process.platform === "win32" ? "tar.exe" : "/usr/bin/tar";
 
 test("resolver prefers one working system gcloud probe", async () => {
   let downloads = 0;
@@ -50,7 +50,10 @@ test("resolver prefers one working system gcloud probe", async () => {
 });
 
 test("gcloud subprocesses disable survey prompts without changing saved configuration", async () => {
-  const result = await runExecutableCommand("/usr/bin/env", []);
+  const result = await runExecutableCommand(process.execPath, [
+    "-e",
+    "process.stdout.write(`CLOUDSDK_SURVEY_DISABLE_PROMPTS=${process.env.CLOUDSDK_SURVEY_DISABLE_PROMPTS ?? ''}`)",
+  ]);
 
   assert.equal(result.exitCode, 0);
   assert.match(result.stdout, /^CLOUDSDK_SURVEY_DISABLE_PROMPTS=true$/mu);
@@ -163,7 +166,7 @@ test("network and extraction failures are actionable and clean up temporary file
   const fixture = await createGcloudArchive(extractDirectory);
   const runner: ExecutableCommandRunner = async (executable) => {
     if (executable === "gcloud") throw missingExecutable();
-    if (executable === TAR_PATH) return failure("archive rejected");
+    if (isTarExecutable(executable)) return failure("archive rejected");
     return success();
   };
   const extractResolver = new GcloudCliResolver({
@@ -330,7 +333,7 @@ test("missing Python is reported without caching an unusable SDK", async () => {
   const fixture = await createGcloudArchive(directory);
   const runner: ExecutableCommandRunner = async (executable, args, options) => {
     if (executable === "gcloud") throw missingExecutable();
-    if (executable === TAR_PATH) return await runExecutableCommand(executable, args, options);
+    if (isTarExecutable(executable)) return await runExecutableCommand(TAR_PATH, args, options);
     return failure("Python executable was not found; set CLOUDSDK_PYTHON");
   };
   const resolver = new GcloudCliResolver({
@@ -397,12 +400,16 @@ function managedRunner(extractionArgs?: Array<readonly string[]>): ExecutableCom
       if ((args[4] ?? "").startsWith('"gcloud ')) throw missingExecutable();
       return success();
     }
-    if (executable === TAR_PATH || executable === "tar.exe") {
+    if (isTarExecutable(executable)) {
       extractionArgs?.push(args);
       return await runExecutableCommand(TAR_PATH, args, options);
     }
     return success();
   };
+}
+
+function isTarExecutable(executable: string): boolean {
+  return executable === "/usr/bin/tar" || executable === "tar.exe";
 }
 
 function missingExecutable(): Error & { code: string } {

@@ -34,12 +34,14 @@ async function defaultPdfLoader(data: Uint8Array): Promise<PdfLoadingTask> {
   const packageDirectory = dirname(
     fileURLToPath(import.meta.resolve("pdfjs-dist/package.json")),
   );
+  const resourceDirectory = (name: string): string =>
+    `${join(packageDirectory, name).split(sep).join("/")}/`;
   return pdfjs.getDocument({
     data,
-    cMapUrl: `${join(packageDirectory, "cmaps")}${sep}`,
+    cMapUrl: resourceDirectory("cmaps"),
     cMapPacked: true,
-    standardFontDataUrl: `${join(packageDirectory, "standard_fonts")}${sep}`,
-    wasmUrl: `${join(packageDirectory, "wasm")}${sep}`,
+    standardFontDataUrl: resourceDirectory("standard_fonts"),
+    wasmUrl: resourceDirectory("wasm"),
   }) as unknown as PdfLoadingTask;
 }
 

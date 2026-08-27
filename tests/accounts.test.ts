@@ -74,7 +74,9 @@ test("JSON profile store normalizes, sorts, replaces, removes, and uses private 
   assert.equal((await store.get("zed@example.com"))?.provider, "imap");
   assert.equal((await store.remove("amy@example.com"))?.provider, "imap");
   assert.equal(await store.get("amy@example.com"), undefined);
-  assert.equal((await stat(profilePath)).mode & 0o777, 0o600);
+  if (process.platform !== "win32") {
+    assert.equal((await stat(profilePath)).mode & 0o777, 0o600);
+  }
 
   const persisted = await readFile(profilePath, "utf8");
   assert.doesNotMatch(persisted, /password|token|secret/iu);
