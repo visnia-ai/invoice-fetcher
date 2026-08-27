@@ -99,7 +99,10 @@ jobs:
             *"$EXPECTED_ARCH"*) ;;
             *) echo "Unexpected executable architecture: $file_output" >&2; exit 1 ;;
           esac
-          actual_version="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --version)"
+          if ! actual_version="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --version)"; then
+            echo "Packaged executable failed while reading its version" >&2
+            exit 1
+          fi
           if [ "$actual_version" != "$EXPECTED_VERSION" ]; then
             printf 'Unexpected version: expected <%s>, received <%s>\n' "$EXPECTED_VERSION" "$actual_version" >&2
             exit 1
