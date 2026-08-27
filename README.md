@@ -2,25 +2,27 @@
 
 # Invoice Fetcher
 
-A dead simple CLI that helps you automatically find and download invoices and receipts in your inbox, so you can close your books faster. Everything is processed locally, and no data is sent to third parties.
+A dead simple CLI that automatically finds invoices & receipts in your inbox, so you can close your books faster. Everything is processed locally, and no data is sent to third parties.
+
+To install, run this on macOS or Linux:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/visnia-ai/invoice-fetcher/main/install.sh | sh
+```
+
+or this command if you use Windows, in the Powershell:
+
+```powershell
+irm https://raw.githubusercontent.com/visnia-ai/invoice-fetcher/main/install.ps1 | iex
+```
 
 ## Table of contents
 
-- [Install](#install)
 - [Configure an account](#configure-an-account)
   - [IMAP-based account](#imap-based-account)
   - [Gmail account](#gmail-account)
 - [Usage](#usage)
-
-## Install
-
-Requires Node.js 22+
-
-```sh
-npm install
-npm run build
-npm link
-```
+- [Build from source](#build-from-source)
 
 ## Configure an account
 
@@ -61,4 +63,14 @@ destination/
 └── 2026-01/
     └── sender.example/
         └── invoice.pdf
+```
+
+## Build from source
+
+Building from source requires Node.js 22 or later:
+
+```sh
+npm install
+npm run build
+npm link
 ```
