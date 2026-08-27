@@ -94,6 +94,7 @@ jobs:
           EXPECTED_ARCH: ${{ matrix.file_arch }}
           EXPECTED_VERSION: ${{ steps.package.outputs.version }}
         run: |
+          set -x
           file_output="$(file build/invoice-fetcher)"
           case "$file_output" in
             *"$EXPECTED_ARCH"*) ;;
