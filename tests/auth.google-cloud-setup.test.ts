@@ -356,7 +356,7 @@ test("automatic setup requires an interactive terminal and reports runner prepar
   await assert.rejects(
     nonInteractive.provision(EMAIL),
     (error: unknown) =>
-      error instanceof GoogleCloudSetupError && error.message.includes("--oauth-client"),
+      error instanceof GoogleCloudSetupError && error.message.includes("interactive terminal"),
   );
 
   const missing = new GoogleCloudOAuthSetup(prompt, {

@@ -189,19 +189,19 @@ export class GcloudCliResolver {
     if (await this.canRun("gcloud")) return "gcloud";
     if (this.platform === "win32" && this.arch === "arm64") {
       throw new GcloudCliError(
-        "Automatic Google setup cannot download a native Google Cloud CLI archive for Windows ARM64. Install gcloud yourself or pass --oauth-client <client-json> instead.",
+        "Automatic Google setup cannot download a native Google Cloud CLI archive for Windows ARM64. Install gcloud yourself and retry.",
       );
     }
     if (!isManagedGcloudPlatform(this.platform)) {
       throw new GcloudCliError(
-        `Automatic Google setup does not support the ${this.platform} operating system. Pass --oauth-client <client-json> instead.`,
+        `Automatic Google setup does not support the ${this.platform} operating system. Install gcloud yourself and retry.`,
       );
     }
     const target = managedGcloudTarget(this.platform, this.arch);
     const archive = this.archives[target];
     if (archive === undefined) {
       throw new GcloudCliError(
-        `Automatic Google setup has no archive configured for ${this.platform} ${this.arch}. Pass --oauth-client <client-json> instead.`,
+        `Automatic Google setup has no archive configured for ${this.platform} ${this.arch}. Install gcloud yourself and retry.`,
       );
     }
 
@@ -242,7 +242,7 @@ export class GcloudCliResolver {
       const actualChecksum = await this.download(archive.url, archivePath);
       if (actualChecksum !== archive.sha256.toLowerCase()) {
         throw new GcloudCliError(
-          "The downloaded Google Cloud CLI failed checksum verification. Nothing was installed; retry later or pass --oauth-client <client-json>.",
+          "The downloaded Google Cloud CLI failed checksum verification. Nothing was installed; retry later.",
         );
       }
 
@@ -305,7 +305,7 @@ export class GcloudCliResolver {
     } catch (error) {
       if (error instanceof GcloudCliError) throw error;
       throw new GcloudCliError(
-        "Could not install the Google Cloud CLI for automatic setup. Retry later or pass --oauth-client <client-json>.",
+        "Could not install the Google Cloud CLI for automatic setup. Retry later.",
         { cause: error },
       );
     } finally {
@@ -319,13 +319,13 @@ export class GcloudCliResolver {
       response = await this.fetch(url);
     } catch (error) {
       throw new GcloudCliError(
-        "Could not download the Google Cloud CLI. Check the network connection and retry, or pass --oauth-client <client-json>.",
+        "Could not download the Google Cloud CLI. Check the network connection and retry.",
         { cause: error },
       );
     }
     if (!response.ok || response.body === null) {
       throw new GcloudCliError(
-        `Could not download the Google Cloud CLI (HTTP ${response.status}). Retry later or pass --oauth-client <client-json>.`,
+        `Could not download the Google Cloud CLI (HTTP ${response.status}). Retry later.`,
       );
     }
 
@@ -406,11 +406,11 @@ export class GcloudCliResolver {
     const detail = result === undefined ? "" : `${result.stderr}\n${result.stdout}`;
     if (/python|cloudsdk_python/iu.test(detail)) {
       return new GcloudCliError(
-        "The Google Cloud CLI requires Python 3.10–3.14. Install a supported Python version, then retry, or pass --oauth-client <client-json>.",
+        "The Google Cloud CLI requires Python 3.10–3.14. Install a supported Python version, then retry.",
       );
     }
     return new GcloudCliError(
-      `The downloaded Google Cloud CLI could not run${result === undefined ? "" : detailSuffix(result)}. Retry or pass --oauth-client <client-json>.`,
+      `The downloaded Google Cloud CLI could not run${result === undefined ? "" : detailSuffix(result)}. Install gcloud yourself or retry.`,
     );
   }
 }
@@ -444,12 +444,12 @@ function managedGcloudTarget(
 ): GcloudArchiveTarget {
   if (arch !== "arm64" && arch !== "x64") {
     throw new GcloudCliError(
-      `Automatic Google setup does not support the ${arch} architecture on ${platform}. Pass --oauth-client <client-json> instead.`,
+      `Automatic Google setup does not support the ${arch} architecture on ${platform}. Install gcloud yourself and retry.`,
     );
   }
   if (platform === "win32" && arch === "arm64") {
     throw new GcloudCliError(
-      "Automatic Google setup cannot download a native Google Cloud CLI archive for Windows ARM64. Install gcloud yourself or pass --oauth-client <client-json> instead.",
+      "Automatic Google setup cannot download a native Google Cloud CLI archive for Windows ARM64. Install gcloud yourself and retry.",
     );
   }
   if (platform === "darwin") return arch === "arm64" ? "darwin-arm64" : "darwin-x64";

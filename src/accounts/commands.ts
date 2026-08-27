@@ -18,7 +18,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 
 export const ACCOUNT_USAGE = `Usage:
   invoice-fetcher add imap <email> [--replace]
-  invoice-fetcher add google <email> [--oauth-client <client-json>] [--replace]
+  invoice-fetcher add google <email> [--replace]
   invoice-fetcher list
   invoice-fetcher remove <email>`;
 
@@ -27,7 +27,6 @@ export interface AddAccountCommand {
   readonly provider: AccountProvider;
   readonly email: string;
   readonly replace: boolean;
-  readonly oauthClientPath?: string;
 }
 
 export type AccountCommand =
@@ -74,7 +73,6 @@ export function parseAccountCommand(argv: readonly string[]): AccountCommand | u
   }
   const email = validEmail(argv[2]);
   let replace = false;
-  let oauthClientPath: string | undefined;
   for (let index = 3; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--replace") {
@@ -82,29 +80,13 @@ export function parseAccountCommand(argv: readonly string[]): AccountCommand | u
       replace = true;
       continue;
     }
-    if (argument === "--oauth-client") {
-      const value = argv[index + 1];
-      if (value === undefined || value.startsWith("--")) {
-        throw new AccountCommandError("--oauth-client requires a client JSON path.");
-      }
-      if (oauthClientPath !== undefined) {
-        throw new AccountCommandError("--oauth-client may only be passed once.");
-      }
-      oauthClientPath = value;
-      index += 1;
-      continue;
-    }
     throw new AccountCommandError(`Unknown account option: ${argument ?? ""}.`);
-  }
-  if (providerValue !== "google" && oauthClientPath !== undefined) {
-    throw new AccountCommandError("--oauth-client is only valid for Google accounts.");
   }
   return {
     kind: "add",
     provider: providerValue,
     email,
     replace,
-    ...(oauthClientPath === undefined ? {} : { oauthClientPath }),
   };
 }
 

@@ -165,7 +165,7 @@ export class GoogleCloudOAuthSetup implements GoogleCloudOAuthSetupService {
     const email = normalizeAccountEmail(rawEmail);
     if (!this.isInteractive()) {
       throw new GoogleCloudSetupError(
-        "Automatic Google setup requires an interactive terminal. Pass --oauth-client <client-json> instead.",
+        "Automatic Google setup requires an interactive terminal.",
       );
     }
     await this.requireGcloud();
@@ -188,7 +188,7 @@ export class GoogleCloudOAuthSetup implements GoogleCloudOAuthSetupService {
       const message =
         error instanceof GcloudCliError
           ? error.message
-          : "The Google Cloud CLI could not be prepared for automatic setup. Retry or pass --oauth-client <client-json>.";
+          : "The Google Cloud CLI could not be prepared for automatic setup. Retry.";
       throw new GoogleCloudSetupError(
         message,
         { cause: error },
@@ -197,10 +197,10 @@ export class GoogleCloudOAuthSetup implements GoogleCloudOAuthSetupService {
     if (result.exitCode !== 0) {
       const detail = commandDetail(result);
       const pythonMessage = /python|cloudsdk_python/iu.test(detail)
-        ? " The Google Cloud CLI requires Python 3.10–3.14. Install a supported Python version, then retry."
+        ? " The Google Cloud CLI requires Python 3.10–3.14. Install a supported Python version."
         : "";
       throw new GoogleCloudSetupError(
-        `The Google Cloud CLI could not run.${pythonMessage} You can also pass --oauth-client <client-json>.`,
+        `The Google Cloud CLI could not run.${pythonMessage} Fix the issue and retry.`,
       );
     }
   }

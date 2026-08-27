@@ -83,8 +83,6 @@ test("parses account management commands", () => {
       "add",
       "google",
       "me@example.com",
-      "--oauth-client",
-      "client.json",
       "--replace",
     ]),
     {
@@ -93,7 +91,6 @@ test("parses account management commands", () => {
         kind: "add",
         provider: "google",
         email: "me@example.com",
-        oauthClientPath: "client.json",
         replace: true,
       },
     },

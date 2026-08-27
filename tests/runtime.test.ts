@@ -417,7 +417,11 @@ test("runtime Google account setup authorizes and stores only the refresh creden
     googleOAuth: oauth,
     googleCloudSetup: {
       async provision() {
-        throw new Error("explicit OAuth clients must bypass gcloud setup");
+        return {
+          clientId: "desktop-client",
+          authorizationEndpoint: "https://accounts.example/authorize",
+          tokenEndpoint: "https://accounts.example/token",
+        };
       },
     },
     prompt: {
@@ -428,23 +432,12 @@ test("runtime Google account setup authorizes and stores only the refresh creden
         return "unused";
       },
     },
-    readOAuthClientFile: async () =>
-      Buffer.from(
-        JSON.stringify({
-          installed: {
-            client_id: "desktop-client",
-            auth_uri: "https://accounts.example/authorize",
-            token_uri: "https://accounts.example/token",
-          },
-        }),
-      ),
   });
 
   const result = await runtime.accountCommands.execute({
     kind: "add",
     provider: "google",
     email: "me@gmail.com",
-    oauthClientPath: "client.json",
     replace: false,
   });
 

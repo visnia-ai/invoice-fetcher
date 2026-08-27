@@ -25,8 +25,6 @@ import {
   type OAuthTokenTransport,
 } from "./types.js";
 
-const DEFAULT_AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
-const DEFAULT_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const TOKEN_REVOCATION_ENDPOINT = "https://oauth2.googleapis.com/revoke";
 const DEFAULT_TIMEOUT_MS = 120_000;
 const CALLBACK_PATH = "/oauth2/callback";
@@ -284,40 +282,6 @@ export class GoogleOAuthFlow {
       scope: response.scope ?? fallbackScope,
     };
   }
-}
-
-export function parseGoogleOAuthClientJson(input: string | Uint8Array): GoogleOAuthClient {
-  let parsed: unknown;
-  try {
-    const text = typeof input === "string" ? input : Buffer.from(input).toString("utf8");
-    parsed = JSON.parse(text) as unknown;
-  } catch (error) {
-    throw new GoogleOAuthError(
-      "INVALID_CLIENT_CONFIG",
-      "Google OAuth client file is not valid JSON.",
-      { cause: error },
-    );
-  }
-  if (!isObject(parsed) || !isObject(parsed.installed)) {
-    throw new GoogleOAuthError(
-      "INVALID_CLIENT_CONFIG",
-      "Google OAuth client file must contain an installed desktop client.",
-    );
-  }
-  const installed = parsed.installed;
-  const clientId = requiredString(installed.client_id);
-  const authorizationEndpoint = optionalString(installed.auth_uri) ?? DEFAULT_AUTHORIZATION_ENDPOINT;
-  const tokenEndpoint = optionalString(installed.token_uri) ?? DEFAULT_TOKEN_ENDPOINT;
-  const clientSecret = optionalString(installed.client_secret);
-  if (clientId === undefined || !isHttpsUrl(authorizationEndpoint) || !isHttpsUrl(tokenEndpoint)) {
-    throw new GoogleOAuthError(
-      "INVALID_CLIENT_CONFIG",
-      "Google OAuth desktop client configuration is missing valid endpoints or a client ID.",
-    );
-  }
-  return clientSecret === undefined
-    ? { clientId, authorizationEndpoint, tokenEndpoint }
-    : { clientId, clientSecret, authorizationEndpoint, tokenEndpoint };
 }
 
 export function serializeGoogleOAuthCredential(credential: GoogleOAuthStoredCredential): string {
@@ -665,14 +629,6 @@ function copyClient(client: GoogleOAuthClient): GoogleOAuthClient {
         authorizationEndpoint: client.authorizationEndpoint,
         tokenEndpoint: client.tokenEndpoint,
       };
-}
-
-function requiredString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function optionalString(value: unknown): string | undefined {
-  return value === undefined ? undefined : requiredString(value);
 }
 
 function isHttpsUrl(value: string): boolean {

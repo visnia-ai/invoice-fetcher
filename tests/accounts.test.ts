@@ -255,15 +255,12 @@ test("account command parser recognizes add/list/remove and validates provider f
       "add",
       "google",
       "ME@Example.com",
-      "--oauth-client",
-      "client.json",
       "--replace",
     ]),
     {
       kind: "add",
       provider: "google",
       email: "me@example.com",
-      oauthClientPath: "client.json",
       replace: true,
     },
   );
@@ -280,6 +277,10 @@ test("account command parser recognizes add/list/remove and validates provider f
   assert.throws(
     () => parseAccountCommand(["add", "icloud", "me@example.com"]),
     /Unsupported account provider: icloud/u,
+  );
+  assert.throws(
+    () => parseAccountCommand(["add", "google", "me@example.com", "--oauth-client"]),
+    /Unknown account option: --oauth-client/u,
   );
 });
 
@@ -327,13 +328,7 @@ test("account command service keeps secrets out of output and enforces replaceme
     google: setup,
     imap: setup,
   });
-  const add = parseAccountCommand([
-    "add",
-    "google",
-    "me@example.com",
-    "--oauth-client",
-    "client.json",
-  ]);
+  const add = parseAccountCommand(["add", "google", "me@example.com"]);
   assert.ok(add);
   const result = await service.execute(add);
   assert.doesNotMatch(result.lines.join(""), /TOP-SECRET/u);

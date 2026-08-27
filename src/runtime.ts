@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-
 import {
   AccountCommandService,
   AccountCommandError,
@@ -20,7 +18,6 @@ import {
   hasExactGoogleMailScope,
   type GoogleCloudOAuthSetupService,
   type GoogleOAuthClient,
-  parseGoogleOAuthClientJson,
   parseGoogleOAuthCredential,
   serializeGoogleOAuthCredential,
   type GoogleOAuthStoredCredential,
@@ -55,7 +52,6 @@ export interface RuntimeDependencies {
   readonly prompt?: AccountPrompt;
   readonly googleOAuth?: GoogleOAuthFlow;
   readonly googleCloudSetup?: GoogleCloudOAuthSetupService;
-  readonly readOAuthClientFile?: (filePath: string) => Promise<Uint8Array>;
   readonly writeStatus?: (message: string) => void;
   readonly gmailClientFactory?: GmailApiClientFactory;
   readonly imapClientFactory?: ImapClientFactory;
@@ -78,7 +74,6 @@ export function createRuntimeServices(
   const googleOAuth = dependencies.googleOAuth ?? new GoogleOAuthFlow();
   const googleCloudSetup =
     dependencies.googleCloudSetup ?? new GoogleCloudOAuthSetup(prompt);
-  const readOAuthClientFile = dependencies.readOAuthClientFile ?? readFile;
   const writeStatus =
     dependencies.writeStatus ?? ((message: string) => process.stderr.write(`${message}\n`));
 
@@ -100,16 +95,8 @@ export function createRuntimeServices(
           );
         }
       }
-      let client: GoogleOAuthClient;
-      if (command.oauthClientPath !== undefined) {
-        client = parseGoogleOAuthClientJson(
-          await readOAuthClientFile(command.oauthClientPath),
-        );
-      } else if (existingCredential !== undefined) {
-        client = existingCredential.client;
-      } else {
-        client = await googleCloudSetup.provision(command.email);
-      }
+      const client: GoogleOAuthClient =
+        existingCredential?.client ?? await googleCloudSetup.provision(command.email);
       if (
         existingCredential !== undefined &&
         !hasExactGoogleMailScope(existingCredential.scope)

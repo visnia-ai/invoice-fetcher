@@ -8,7 +8,6 @@ import {
   FetchOAuthRevocationTransport,
   GoogleOAuthError,
   GoogleOAuthFlow,
-  parseGoogleOAuthClientJson,
   parseGoogleOAuthCallbackUrl,
   parseGoogleOAuthCredential,
   serializeGoogleOAuthCredential,
@@ -23,39 +22,6 @@ const CLIENT: GoogleOAuthClient = {
   authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
   tokenEndpoint: "https://oauth2.googleapis.com/token",
 };
-
-test("parses only a valid Google installed-desktop client configuration", () => {
-  assert.deepEqual(
-    parseGoogleOAuthClientJson(
-      JSON.stringify({
-        installed: {
-          client_id: CLIENT.clientId,
-          client_secret: CLIENT.clientSecret,
-          auth_uri: CLIENT.authorizationEndpoint,
-          token_uri: CLIENT.tokenEndpoint,
-          redirect_uris: ["http://localhost"],
-        },
-      }),
-    ),
-    CLIENT,
-  );
-
-  for (const malformed of [
-    "not-json",
-    "{}",
-    JSON.stringify({ web: { client_id: "web-client" } }),
-    JSON.stringify({ installed: { client_id: "", token_uri: CLIENT.tokenEndpoint } }),
-    JSON.stringify({
-      installed: { client_id: CLIENT.clientId, token_uri: "http://tokens.example.test" },
-    }),
-  ]) {
-    assert.throws(
-      () => parseGoogleOAuthClientJson(malformed),
-      (error: unknown) =>
-        error instanceof GoogleOAuthError && error.code === "INVALID_CLIENT_CONFIG",
-    );
-  }
-});
 
 test("uses state and S256 PKCE, exchanges the callback code, and stores no access token", async () => {
   const listener = new FakeCallbackListener();

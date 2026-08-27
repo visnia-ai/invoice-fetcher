@@ -12,7 +12,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 export const USAGE = `Usage:
   invoice-fetcher <start-date> <end-date> <email-inbox-to-search-through> <destination-folder-for-invoices>
   invoice-fetcher add imap <email> [--replace]
-  invoice-fetcher add google <email> [--oauth-client <client-json>] [--replace]
+  invoice-fetcher add google <email> [--replace]
   invoice-fetcher list
   invoice-fetcher remove <email>
 
@@ -23,7 +23,6 @@ Arguments:
   destination-folder-for-invoices Folder in which invoice attachments will be organized
 
 Options:
-  --oauth-client <client-json>  Use an existing Google Desktop OAuth client
   --replace                     Replace an existing configured account
   -h, --help                    Show this help
   -v, --version                 Show the version`;
