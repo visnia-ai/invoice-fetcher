@@ -3,12 +3,14 @@
 set -eu
 
 repository="https://github.com/visnia-ai/invoice-fetcher"
-install_directory="${INSTALL_DIR:-/usr/local/bin}"
 
 fail() {
   printf 'invoice-fetcher: %s\n' "$1" >&2
   exit 1
 }
+
+[ -n "${HOME:-}" ] || fail "HOME is not set."
+install_directory="${INSTALL_DIR:-$HOME/.local/bin}"
 
 command -v curl >/dev/null 2>&1 || fail "curl is required."
 command -v tar >/dev/null 2>&1 || fail "tar is required."
@@ -69,3 +71,23 @@ else
 fi
 
 printf 'Installed invoice-fetcher to %s/invoice-fetcher\n' "$install_directory"
+
+case "${SHELL:-}" in
+  */zsh) shell_configuration="$HOME/.zshrc" ;;
+  */bash)
+    if [ "$platform" = "macos" ]; then
+      shell_configuration="$HOME/.bash_profile"
+    else
+      shell_configuration="$HOME/.bashrc"
+    fi
+    ;;
+  *) shell_configuration="$HOME/.profile" ;;
+esac
+
+path_line="export PATH=\"$install_directory:\$PATH\""
+if ! { [ -f "$shell_configuration" ] && grep -Fqx "$path_line" "$shell_configuration"; }; then
+  printf '\n# Added by the invoice-fetcher installer\n%s\n' "$path_line" >> "$shell_configuration" ||
+    fail "could not update $shell_configuration."
+  printf 'Added %s to PATH in %s. Open a new terminal to use it.\n' \
+    "$install_directory" "$shell_configuration"
+fi

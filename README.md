@@ -4,10 +4,10 @@
 
 A dead simple CLI that automatically finds invoices & receipts in your inbox, so you can close your books faster. Everything is processed locally, and no data is sent to third parties.
 
-To install, run this on macOS or Linux:
+To install on macOS or Linux, run the following command. The installer adds `invoice-fetcher` to your `PATH` for new terminal sessions:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/visnia-ai/invoice-fetcher/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/visnia-ai/invoice-fetcher/main/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
 ```
 
 or this command if you use Windows, in the Powershell:

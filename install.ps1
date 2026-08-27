@@ -48,6 +48,9 @@ try {
         $updatedPath = (@($pathEntries) + $installDirectory) -join ';'
         [Environment]::SetEnvironmentVariable("Path", $updatedPath, "User")
     }
+    if (@($env:Path -split ';') -notcontains $installDirectory) {
+        $env:Path = "$installDirectory;$env:Path"
+    }
 
     Write-Host "Installed invoice-fetcher to $installDirectory\invoice-fetcher.exe"
     Write-Host "Open a new terminal, then run: invoice-fetcher --version"
