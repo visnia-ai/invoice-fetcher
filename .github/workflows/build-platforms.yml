@@ -107,7 +107,10 @@ jobs:
             printf 'Unexpected version: expected <%s>, received <%s>\n' "$EXPECTED_VERSION" "$actual_version" >&2
             exit 1
           fi
-          help_output="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --help)"
+          if ! help_output="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --help)"; then
+            echo "Packaged executable failed while reading its help output" >&2
+            exit 1
+          fi
           case "$help_output" in
             *invoice-fetcher*) ;;
             *) echo "Help output is missing the executable name" >&2; exit 1 ;;
