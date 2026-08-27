@@ -100,7 +100,10 @@ jobs:
             *) echo "Unexpected executable architecture: $file_output" >&2; exit 1 ;;
           esac
           actual_version="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --version)"
-          test "$actual_version" = "$EXPECTED_VERSION"
+          if [ "$actual_version" != "$EXPECTED_VERSION" ]; then
+            printf 'Unexpected version: expected <%s>, received <%s>\n' "$EXPECTED_VERSION" "$actual_version" >&2
+            exit 1
+          fi
           help_output="$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --help)"
           case "$help_output" in
             *invoice-fetcher*) ;;
