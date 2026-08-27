@@ -1,0 +1,52 @@
+{
+  "name": "invoice-fetcher",
+  "version": "1.0.0",
+  "description": "Fetch invoice attachments from Gmail or IMAP into an organized local folder.",
+  "type": "module",
+  "bin": {
+    "invoice-fetcher": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "assets/readme-header.jpg"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node -e \"require('node:fs').chmodSync('dist/cli.js', 0o755)\"",
+    "package:macos-x64": "pkg . --sea --targets node22-macos-x64 --output build/invoice-fetcher",
+    "package:macos-arm64": "pkg . --sea --targets node22-macos-arm64 --output build/invoice-fetcher",
+    "package:linux-x64": "pkg . --sea --targets node22-linux-x64 --output build/invoice-fetcher",
+    "package:linux-arm64": "pkg . --sea --targets node22-linux-arm64 --output build/invoice-fetcher",
+    "package:windows-x64": "pkg . --sea --targets node22-win-x64 --output build/invoice-fetcher.exe",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/pdfjs-dist/package.json",
+      "node_modules/pdfjs-dist/legacy/build/**/*.mjs",
+      "node_modules/pdfjs-dist/cmaps/**/*",
+      "node_modules/pdfjs-dist/standard_fonts/**/*",
+      "node_modules/pdfjs-dist/wasm/**/*",
+      "node_modules/@napi-rs/keyring/package.json",
+      "node_modules/@napi-rs/keyring-*/package.json",
+      "node_modules/@napi-rs/keyring-*/*.node"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@napi-rs/keyring": "^1.3.0",
+    "googleapis": "^176.0.0",
+    "imapflow": "^1.7.6",
+    "mailparser": "^3.9.16",
+    "pdfjs-dist": "^6.2.108"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.6",
+    "@types/node": "^24.10.0",
+    "@yao-pkg/pkg": "6.22.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

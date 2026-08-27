@@ -1,0 +1,148 @@
+name: Build standalone executables
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            platform: macos
+            arch: x64
+            package_script: package:macos-x64
+            executable: invoice-fetcher
+            file_arch: x86_64
+          - runner: macos-15
+            platform: macos
+            arch: arm64
+            package_script: package:macos-arm64
+            executable: invoice-fetcher
+            file_arch: arm64
+          - runner: windows-2025
+            platform: windows
+            arch: x64
+            package_script: package:windows-x64
+            executable: invoice-fetcher.exe
+          - runner: ubuntu-24.04
+            platform: linux
+            arch: x64
+            package_script: package:linux-x64
+            executable: invoice-fetcher
+            file_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
+            package_script: package:linux-arm64
+            executable: invoice-fetcher
+            file_arch: aarch64
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Build JavaScript
+        run: npm run build
+
+      - name: Confirm runner architecture
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: >-
+          node -e "if (process.arch !== process.env.EXPECTED_ARCH) throw new Error('Unexpected runner architecture: ' + process.arch)"
+
+      - name: Package standalone executable
+        run: npm run ${{ matrix.package_script }}
+
+      - name: Apply ad-hoc code signature
+        if: matrix.platform == 'macos'
+        run: codesign --force --sign - build/invoice-fetcher
+
+      - name: Read package version
+        id: package
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + require('./package.json').version + require('node:os').EOL)"
+
+      - name: Verify Unix executable
+        if: matrix.platform != 'windows'
+        shell: bash
+        env:
+          EXPECTED_ARCH: ${{ matrix.file_arch }}
+          EXPECTED_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          file build/invoice-fetcher | grep -q "$EXPECTED_ARCH"
+          test "$(env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --version)" = "$EXPECTED_VERSION"
+          env PATH=/usr/bin:/bin:/usr/sbin:/sbin build/invoice-fetcher --help | grep -q "invoice-fetcher"
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            codesign --verify --strict --verbose=2 build/invoice-fetcher
+          fi
+
+      - name: Verify Windows executable
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        env:
+          EXPECTED_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          $version = & build/invoice-fetcher.exe --version
+          if ($version.Trim() -ne $env:EXPECTED_VERSION) { throw "Unexpected version: $version" }
+          $help = & build/invoice-fetcher.exe --help
+          if ($help -notmatch "invoice-fetcher") { throw "Help output is missing the executable name" }
+
+      - name: Create Unix archive and checksum
+        if: matrix.platform != 'windows'
+        shell: bash
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          base="invoice-fetcher-${VERSION}-${{ matrix.platform }}-${{ matrix.arch }}"
+          mkdir -p release
+          tar -czf "release/${base}.tar.gz" -C build invoice-fetcher
+          cd release
+          if command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "${base}.tar.gz" > "${base}.tar.gz.sha256"
+          else
+            sha256sum "${base}.tar.gz" > "${base}.tar.gz.sha256"
+          fi
+
+      - name: Create Windows archive and checksum
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          $base = "invoice-fetcher-$env:VERSION-${{ matrix.platform }}-${{ matrix.arch }}"
+          New-Item -ItemType Directory -Force release | Out-Null
+          Compress-Archive -Path build/invoice-fetcher.exe -DestinationPath "release/$base.zip"
+          $hash = (Get-FileHash "release/$base.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $base.zip" | Set-Content -Encoding ascii "release/$base.zip.sha256"
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoice-fetcher-${{ steps.package.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: release/*
+          if-no-files-found: error
