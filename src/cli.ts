@@ -24,7 +24,7 @@ const defaultDependencies: CliDependencies = {
   runAccountCommand: (command) => runtime.accountCommands.execute(command),
   stdout: process.stdout,
   stderr: process.stderr,
-  version: "1.0.2",
+  version: "1.0.3",
   platform: process.platform,
 };
 

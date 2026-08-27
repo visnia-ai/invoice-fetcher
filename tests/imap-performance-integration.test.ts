@@ -190,9 +190,7 @@ test("three IMAP sessions download concurrently and publish in stable UID order"
       onAttachment: async (attachment) => { streamed.push(attachment.originalName); },
     });
 
-    for (let turn = 0; turn < 20 && shared.maximumActive < 3; turn += 1) {
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
+    await waitFor(() => shared.maximumActive === 3);
     assert.equal(shared.maximumActive, 3);
     shared.gates.get(3)?.resolve();
     shared.gates.get(2)?.resolve();
