@@ -396,7 +396,7 @@ function archiveManifest(
 function managedRunner(extractionArgs?: Array<readonly string[]>): ExecutableCommandRunner {
   return async (executable, args, options) => {
     if (executable === "gcloud") throw missingExecutable();
-    if (executable === "cmd.exe") {
+    if (path.win32.basename(executable).toLowerCase() === "cmd.exe") {
       if ((args[4] ?? "").startsWith('"gcloud ')) throw missingExecutable();
       return success();
     }
